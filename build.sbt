@@ -20,11 +20,14 @@ lazy val releaseVersionFinder = Project(appName, file("."))
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
 
-val compileDependencies = Seq()
+val compileDependencies = Seq(
+  "com.github.scopt" %% "scopt"     % "3.7.0",
+  "org.typelevel"    %% "cats-core" % "1.0.1"
+)
 
 val testDependencies = Seq(
-  "org.pegdown"    % "pegdown"     % "1.6.0"  % Test,
-  "org.scalatest"  %% "scalatest"  % "3.0.5"  % Test
+  "org.pegdown"   % "pegdown"    % "1.6.0" % Test,
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
 
 val assemblySettings = Seq(
