@@ -19,10 +19,17 @@ package uk.gov.hmrc.versioning
 class ReleaseVersionFinder(makeRelease: Boolean, makeHotfix: Boolean) {
   import ReleaseVersionFinder._
 
-  def version(tagOrGitDescribe: String, gitHeadCommit: Option[String], majorVersion: Int): String =
-    nextVersion(tagOrGitDescribe, gitHeadCommit, majorVersion) + (if (makeRelease) "" else "-SNAPSHOT")
+  def version(tag: Option[String], gitDescribe: String, majorVersion: Int): String =
+    nextVersion(tag, gitDescribe, majorVersion) + (if (makeRelease) "" else "-SNAPSHOT")
 
-  private def nextVersion(gitDescribe: String, gitHeadCommit: Option[String], requestedMajorVersion: Int): String = {
+  def version(tags: Seq[String], gitDescribe: String, majorVersion: Int): String =
+    version(
+      tag          = tags.sortWith(versionComparator).reverse.headOption,
+      gitDescribe  = gitDescribe,
+      majorVersion = majorVersion
+    )
+
+  private def nextVersion(tag: Option[String], gitDescribe: String, requestedMajorVersion: Int): String = {
     val gitDescribeFormat = s"""^$versionRegex(?:-.*-g.*$$){0,1}""".r
 
     def validMajorVersion(current: Int, requested: Int): Boolean =
@@ -48,13 +55,12 @@ class ReleaseVersionFinder(makeRelease: Boolean, makeHotfix: Boolean) {
       case gitDescribeFormat(major, AsInt(minor), _) =>
         s"$major.${minor + 1}.0"
 
-      case unrecognizedGitDescribe if gitHeadCommit.exists(_.contains(unrecognizedGitDescribe)) => "0.1.0"
+      case _ if tag.isEmpty => "0.1.0"
 
       case unrecognizedGitDescribe =>
         throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
     }
   }
-
 }
 
 object ReleaseVersionFinder {
