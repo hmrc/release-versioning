@@ -28,13 +28,17 @@ object ReleaseVersioning {
     latestTag match {
       case None if requestedMajorVersion > 0 =>
         throw new IllegalArgumentException(
-          "Invalid majorVersion: 1. You cannot request a major version of 1 if there are no tags in the repository."
+          s"Invalid majorVersion: $requestedMajorVersion. You cannot request a major version of $requestedMajorVersion if there are no tags in the repository."
         )
-      case None => "0.1.0"
+
+      case None =>
+        "0.1.0"
+
       case Some(latestTagFormat(AsInt(major), _, _)) if major != requestedMajorVersion && hotfix =>
         throw new IllegalArgumentException(
           s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
         )
+
       case Some(latestTagFormat(AsInt(major), _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
         throw new IllegalArgumentException(
           s"Invalid majorVersion: $requestedMajorVersion. " +
