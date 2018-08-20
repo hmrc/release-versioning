@@ -61,7 +61,7 @@ java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-ass
  Example: 
  
  ```bash
- java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-0.2.0-SNAPSHOT.jar -r true -f false -t $(git tag --list | tr '\n' ',') -d $(git describe --always) -m 0
+ java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-x.y.z-SNAPSHOT.jar -r true -f false -t $(git tag --list | tr '\n' ',') -d $(git describe --always) -m 0
  ```
 
 
