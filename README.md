@@ -39,7 +39,7 @@
  You can see the available options by running the assembly jar with: 
  
 ```bash
-java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-0.2.0-SNAPSHOT.jar --help
+java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-x.y.z-SNAPSHOT.jar --help
 ```
 
 
