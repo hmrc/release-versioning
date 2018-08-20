@@ -22,7 +22,7 @@ lazy val releaseVersionFinder = Project(appName, file("."))
 
 val compileDependencies = Seq(
   "com.github.scopt" %% "scopt"     % "3.7.0",
-  "org.typelevel"    %% "cats-core" % "1.0.1"
+  "org.typelevel"    %% "cats-core" % "1.2.0"
 )
 
 val testDependencies = Seq(
@@ -34,8 +34,6 @@ val assemblySettings = Seq(
   test in assembly := {},
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", xs @ _*)                            => MergeStrategy.discard
-    case PathList("org", "apache", "commons", "logging", xs @ _*) => MergeStrategy.first
-    case PathList("javax", "inject", xs @ _*)                     => MergeStrategy.first
     case x                                                        => (assemblyMergeStrategy in assembly).value(x)
   },
   artifact in (Compile, assembly) := {
