@@ -9,7 +9,7 @@
  
  The rules for determining the next version are the following:
  
- 1. The library recognises tags in the format: `release/x.y.z` or `vx.y.z` possibly with a suffix `-g<short SHA1 hash commit id`
+ 1. The library recognises tags in the format: `release/x.y.z` or `vx.y.z` possibly with a suffix `-g<short SHA-1 hash commit id`
  2. It is not possible to change the major version as part of a hotfix
  3. The requested major version must be increased by at most 1
  4. If the repository is untagged the initial version will be `0.1.0`
