@@ -6,7 +6,7 @@ import uk.gov.hmrc.SbtArtifactory
 
 val appName: String = "release-versioning"
 
-lazy val releaseVersionFinder = Project(appName, file("."))
+lazy val releaseVersioning = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
   .settings(scalaSettings: _*)
   .settings(defaultSettings(): _*)

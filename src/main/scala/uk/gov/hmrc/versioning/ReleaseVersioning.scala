@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.versioning
 
-class ReleaseVersionFinder(makeRelease: Boolean, makeHotfix: Boolean) {
-  import ReleaseVersionFinder._
+class ReleaseVersioning(makeRelease: Boolean, makeHotfix: Boolean) {
+  import ReleaseVersioning._
 
   def version(tag: Option[String], gitDescribe: String, majorVersion: Int): String =
     nextVersion(tag, gitDescribe, majorVersion) + (if (makeRelease) "" else "-SNAPSHOT")
@@ -63,7 +63,7 @@ class ReleaseVersionFinder(makeRelease: Boolean, makeHotfix: Boolean) {
   }
 }
 
-object ReleaseVersionFinder {
+object ReleaseVersioning {
   private val versionRegex = """(?:release\/|v)?(\d+)\.(\d+)\.(\d+)"""
 
   def versionComparator(tag1: String, tag2: String): Boolean = {

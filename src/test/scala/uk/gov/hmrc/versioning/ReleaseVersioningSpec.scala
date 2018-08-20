@@ -20,7 +20,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import scala.util.Random
 
-class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPropertyChecks {
+class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPropertyChecks {
 
   "version for a single tag" should {
     val scenarios = Table(
@@ -31,64 +31,64 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
     forAll(scenarios) { (makeRelease, expectedVersionSuffix) =>
       s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.1-1-g1234567 and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = Some("v0.1.1"), gitDescribe = "v0.1.1-1-g1234567", majorVersion = 0) shouldBe s"0.2.0$expectedVersionSuffix"
       }
 
       s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.0 (a tag on HEAD) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = Some("v0.1.1"), gitDescribe = "v0.1.0", majorVersion = 0) shouldBe s"0.2.0$expectedVersionSuffix"
       }
 
       s"return 0.1.0$expectedVersionSuffix when git describe returns the id on HEAD (no tags) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = None, gitDescribe = "3c9e281", majorVersion = 0) shouldBe s"0.1.0$expectedVersionSuffix"
       }
 
       s"throw exception when given v0.1.0.1 (a tag with an incorrect format) and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(tag = Some("v0.1.0.1"), gitDescribe = "v0.1.0.1", majorVersion = 0)
         }.getMessage shouldBe "invalid version format for 'v0.1.0.1'"
       }
 
       s"use the new major version when makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = Some("v0.1.0"), gitDescribe = "v0.1.0-1-g1234567", majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
       }
 
       s"use the new major version and return 1.0.0$expectedVersionSuffix when given v0.1.0 (a tag on HEAD) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = Some("v0.1.0"), gitDescribe = "v0.1.0", majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
       }
 
       s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 (a tag on HEAD) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(tag = Some("release/0.1.0"), gitDescribe = "release/0.1.0", majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
       }
 
       s"create a new patch if makeHotfix is true and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = true)
+        new ReleaseVersioning(makeRelease, makeHotfix = true)
           .version(tag = Some("v0.1.0"), gitDescribe = "v0.1.0-1-g1234567", majorVersion = 0) shouldBe s"0.1.1$expectedVersionSuffix"
       }
 
       s"throw an exception if a new major is requested at the same time as a hotfix and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = true)
+          new ReleaseVersioning(makeRelease, makeHotfix = true)
             .version(tag = Some("v0.1.0"), gitDescribe = "v0.1.0-1-g1234567", majorVersion = 1)
         }.getMessage shouldBe "Invalid majorVersion: 1. It is not possible to change the major version as part of a hotfix."
       }
 
       s"throw exception if new major version is > current version + 1 and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(tag = Some("v0.1.0"), gitDescribe = "v0.1.0-1-g1234567", majorVersion = 2)
         }.getMessage shouldBe "Invalid majorVersion: 2. The accepted values are 0 or 1 based on current git tags."
       }
 
       s"throw exception if new major version is < current version and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(tag = Some("v1.1.0"), gitDescribe = "v1.1.0-1-g1234567", majorVersion = 0)
         }.getMessage shouldBe "Invalid majorVersion: 0. The accepted values are 1 or 2 based on current git tags."
       }
@@ -104,7 +104,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
     forAll(scenarios) { (makeRelease, expectedVersionSuffix) =>
       s"return 0.3.0$expectedVersionSuffix when the latest tag from 'git tag --list' is 0.2.0 and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Seq("v0.1.1", "v0.1.0", "v0.2.0"),
             gitDescribe  = "v0.2.0-1-g1234567",
@@ -113,7 +113,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"return 0.3.0$expectedVersionSuffix when the latest tag is in 'release/' format and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Seq("release/0.2.0"),
             gitDescribe  = "release/0.2.0-1-g1234567",
@@ -122,7 +122,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"return 0.1.0$expectedVersionSuffix when there is no tags and git describe is the head commit and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Nil,
             gitDescribe  = "c13c993",
@@ -132,7 +132,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
       s"throw exception when given v0.1.0.1 (a tag with an incorrect format) and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(
               tags         = Seq("v0.1.0.1"),
               gitDescribe  = "v0.1.0.1-1-g1234567",
@@ -142,7 +142,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"use the new major version when makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Seq("v0.1.0"),
             gitDescribe  = "v0.1.0-1-g1234561",
@@ -151,7 +151,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"use the new major version and return 1.0.0$expectedVersionSuffix when given v0.1.0 (a tag on HEAD) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Seq("v0.1.0"),
             gitDescribe  = "v0.1.0",
@@ -160,7 +160,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 (a tag on HEAD) and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+        new ReleaseVersioning(makeRelease, makeHotfix = false)
           .version(
             tags         = Seq("release/0.1.0"),
             gitDescribe  = "release/0.1.0",
@@ -169,7 +169,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
       }
 
       s"create a new patch if makeHotfix is true and makeRelease is $makeRelease" in {
-        new ReleaseVersionFinder(makeRelease, makeHotfix = true)
+        new ReleaseVersioning(makeRelease, makeHotfix = true)
           .version(
             tags         = Seq("v0.1.0"),
             gitDescribe  = "v0.1.0-1-g1234561",
@@ -179,7 +179,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
       s"throw an exception if a new major is requested at the same time as a hotfix and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = true)
+          new ReleaseVersioning(makeRelease, makeHotfix = true)
             .version(
               tags         = Seq("v0.1.0"),
               gitDescribe  = "v0.1.0-1-g1234561",
@@ -190,7 +190,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
       s"throw exception if new major version is > current version + 1 and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(
               tags         = Seq("v0.1.0"),
               gitDescribe  = "v0.1.0-1-g1234561",
@@ -201,7 +201,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
 
       s"throw exception if new major version is < current version and makeRelease is $makeRelease" in {
         intercept[IllegalArgumentException] {
-          new ReleaseVersionFinder(makeRelease, makeHotfix = false)
+          new ReleaseVersioning(makeRelease, makeHotfix = false)
             .version(
               tags         = Seq("v1.1.0"),
               gitDescribe  = "v1.1.0-1-g1234561",
@@ -233,7 +233,7 @@ class ReleaseVersionFinderSpec extends WordSpec with Matchers with TableDrivenPr
   def assertOrder(expectedOrder: List[String]): Unit =
     (1 to 25).foreach { _ =>
       val unsorted = Random.shuffle(expectedOrder)
-      unsorted.sortWith(ReleaseVersionFinder.versionComparator) shouldBe expectedOrder
+      unsorted.sortWith(ReleaseVersioning.versionComparator) shouldBe expectedOrder
     }
 
 }

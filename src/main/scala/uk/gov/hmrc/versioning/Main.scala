@@ -35,7 +35,7 @@ object Main {
       gitDescribe <- programArgs.maybeGitDescribe
     } yield
       Either.catchNonFatal {
-        new ReleaseVersionFinder(programArgs.makeRelease, programArgs.makeHotfix)
+        new ReleaseVersioning(programArgs.makeRelease, programArgs.makeHotfix)
           .version(programArgs.tags, gitDescribe, programArgs.majorVersion)
       }) match {
       case Some(Right(nextReleaseVersion)) =>
