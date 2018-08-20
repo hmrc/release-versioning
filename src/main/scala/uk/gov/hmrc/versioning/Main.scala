@@ -70,5 +70,6 @@ object Main {
         .required()
         .action((m, args) => args.copy(majorVersion = m))
         .text("major-version is a required argument with the major version number")
+      help("help").text("prints this usage text")
     }.parse(args, Args())
 }
