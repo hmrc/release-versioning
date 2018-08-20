@@ -49,7 +49,7 @@ object Main {
     }
 
   private def parseArgs(args: Array[String]): Option[Args] =
-    new OptionParser[Args]("release-version-finder") {
+    new OptionParser[Args]("release-versioning") {
       opt[Boolean]('r', "make-release")
         .required()
         .action((r, args) => args.copy(makeRelease = r))

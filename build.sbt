@@ -4,7 +4,7 @@ import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.versioning.SbtGitVersioning
 import uk.gov.hmrc.SbtArtifactory
 
-val appName: String = "release-version-finder"
+val appName: String = "release-versioning"
 
 lazy val releaseVersionFinder = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)

@@ -1,7 +1,7 @@
 
-# release-version-finder
+# release-versioning
 
- [ ![Download](https://api.bintray.com/packages/hmrc/releases/release-version-finder/images/download.svg) ](https://bintray.com/hmrc/releases/release-version-finder/_latestVersion)
+ [ ![Download](https://api.bintray.com/packages/hmrc/releases/release-versioning/images/download.svg) ](https://bintray.com/hmrc/releases/release-versioning/_latestVersion)
 
 This is a placeholder README.md for a new repository
 
