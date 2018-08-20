@@ -42,30 +42,29 @@
 java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-x.y.z-SNAPSHOT.jar --help
 ```
 
-
 ```bash
-  Usage: release-versioning [options]
+Usage: release-versioning [options]
 
-  -r, --make-release <value>
-                           make-release is a Boolean required argument indicating whether it should create a release or a snapshot
-  -f, --make-hotfix <value>
-                           make-hotfix is a Boolean required argument indicating whether it should create a hotfix or a major/minor release
-  -t, --tags <value>       tags is a required argument containing the output from 'git tag --list' as a comma-separated list of values
-  -d, --git-describe <value>
-                           git-describe is a required argument with the output from 'git describe --always'
-  -m, --major-version <value>
-                           major-version is a required argument with the major version number
   --help                   prints this usage text
+  -r, --release            release is a required Boolean argument indicating whether it should be a release or a snapshot
+  -f, --hotfix             hotfix is a required Boolean argument indicating whether it should be a hotfix or a major/minor release
+  -t, --latest-tag <value>
+                           latest-tag is an optional argument expecting the latest tag name
+  -m, --major-version <value>
+                           major-version is required when the latest-tag option is defined
 ```
  
- Example: 
+ Examples: 
  
+ * Some latest tag defined
  ```bash
- java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-assembly-x.y.z-SNAPSHOT.jar -r true -f false -t $(git tag --list | tr '\n' ',') -d $(git describe --always) -m 0
+ java -jar release-versioning-assembly-x.y.z-SNAPSHOT.jar -r -f -t v0.1.0 -m 0
  ```
 
-
-
+ * No latest tag defined
+ ```bash
+ java -jar release-versioning-assembly-x.y.z-SNAPSHOT.jar -r -f
+ ```
 
 ### License
 
