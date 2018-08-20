@@ -50,7 +50,7 @@ java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-ass
                            make-release is a Boolean required argument indicating whether it should create a release or a snapshot
   -f, --make-hotfix <value>
                            make-hotfix is a Boolean required argument indicating whether it should create a hotfix or a major/minor release
-  -t, --tags <value>       tags is a required argument containing the output from 'git tag --list'
+  -t, --tags <value>       tags is a required argument containing the output from 'git tag --list' as a comma-separated list of values
   -d, --git-describe <value>
                            git-describe is a required argument with the output from 'git describe --always'
   -m, --major-version <value>
