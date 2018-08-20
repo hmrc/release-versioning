@@ -16,70 +16,50 @@
 
 package uk.gov.hmrc.versioning
 
-class ReleaseVersioning(makeRelease: Boolean, makeHotfix: Boolean) {
-  import ReleaseVersioning._
+object ReleaseVersioning {
+  def version(release: Boolean, hotfix: Boolean, latestTag: Option[String], majorVersion: Int): String =
+    nextVersion(release, hotfix, latestTag, majorVersion) + (if (release) "" else "-SNAPSHOT")
 
-  def version(tag: Option[String], gitDescribe: String, majorVersion: Int): String =
-    nextVersion(tag, gitDescribe, majorVersion) + (if (makeRelease) "" else "-SNAPSHOT")
-
-  def version(tags: Seq[String], gitDescribe: String, majorVersion: Int): String =
-    version(
-      tag          = tags.sortWith(versionComparator).reverse.headOption,
-      gitDescribe  = gitDescribe,
-      majorVersion = majorVersion
-    )
-
-  private def nextVersion(tag: Option[String], gitDescribe: String, requestedMajorVersion: Int): String = {
-    val gitDescribeFormat = s"""^$versionRegex(?:-.*-g.*$$){0,1}""".r
-
-    def validMajorVersion(current: Int, requested: Int): Boolean =
-      requested == current || requested == current + 1
-
-    gitDescribe match {
-      case gitDescribeFormat(AsInt(major), _, _) if major != requestedMajorVersion && makeHotfix =>
+  private def nextVersion(
+    release: Boolean,
+    hotfix: Boolean,
+    latestTag: Option[String],
+    requestedMajorVersion: Int): String =
+    latestTag match {
+      case None if requestedMajorVersion > 0 =>
+        throw new IllegalArgumentException(
+          "Invalid majorVersion: 1. You cannot request a major version of 1 if there are no tags in the repository."
+        )
+      case None => "0.1.0"
+      case Some(latestTagFormat(AsInt(major), _, _)) if major != requestedMajorVersion && hotfix =>
         throw new IllegalArgumentException(
           s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
         )
-      case gitDescribeFormat(AsInt(major), _, _) if !validMajorVersion(major, requestedMajorVersion) =>
+      case Some(latestTagFormat(AsInt(major), _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
         throw new IllegalArgumentException(
           s"Invalid majorVersion: $requestedMajorVersion. " +
             s"The accepted values are $major or ${major + 1} based on current git tags."
         )
 
-      case gitDescribeFormat(AsInt(major), _, _) if requestedMajorVersion != major =>
+      case Some(latestTagFormat(AsInt(major), _, _)) if requestedMajorVersion != major =>
         s"$requestedMajorVersion.0.0"
 
-      case gitDescribeFormat(major, minor, AsInt(patch)) if makeHotfix =>
+      case Some(latestTagFormat(major, minor, AsInt(patch))) if hotfix =>
         s"$major.$minor.${patch + 1}"
 
-      case gitDescribeFormat(major, AsInt(minor), _) =>
+      case Some(latestTagFormat(major, AsInt(minor), _)) =>
         s"$major.${minor + 1}.0"
 
-      case _ if tag.isEmpty => "0.1.0"
-
-      case unrecognizedGitDescribe =>
+      case Some(unrecognizedGitDescribe) =>
         throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
     }
-  }
-}
 
-object ReleaseVersioning {
-  private val versionRegex = """(?:release\/|v)?(\d+)\.(\d+)\.(\d+)"""
-
-  def versionComparator(tag1: String, tag2: String): Boolean = {
-    val Version = versionRegex.r
-    (tag1, tag2) match {
-      case (Version(AsInt(major1), _, _), Version(AsInt(major2), _, _)) if major1 != major2 => major1 < major2
-      case (Version(_, AsInt(minor1), _), Version(_, AsInt(minor2), _)) if minor1 != minor2 => minor1 < minor2
-      case (Version(_, _, AsInt(patch1)), Version(_, _, AsInt(patch2))) if patch1 != patch2 => patch1 < patch2
-      case (Version(_, _, _), _)                                                            => false
-      case (_, Version(_, _, _))                                                            => true
-      case (_, _)                                                                           => true
-    }
-  }
+  private val latestTagFormat = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(?:-.*-g.*$$){0,1}""".r
 
   private object AsInt {
     def unapply(arg: String): Option[Int] = Some(arg.toInt)
   }
 
+  private def validMajorVersion(current: Int, requested: Int): Boolean =
+    requested == current || requested == current + 1
 }

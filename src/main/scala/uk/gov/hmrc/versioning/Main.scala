@@ -20,24 +20,21 @@ import cats.implicits._
 import scopt.OptionParser
 
 case class Args(
-  makeRelease: Boolean             = false,
-  makeHotfix: Boolean              = false,
-  tags: Seq[String]                = Nil,
-  maybeGitDescribe: Option[String] = None,
-  majorVersion: Int                = 0
+  release: Boolean             = false,
+  hotfix: Boolean              = false,
+  tags: Seq[String]            = Nil,
+  optLatestTag: Option[String] = None,
+  majorVersion: Int            = 0
 )
 
 object Main {
-
   def main(args: Array[String]): Unit =
-    (for {
-      programArgs <- parseArgs(args)
-      gitDescribe <- programArgs.maybeGitDescribe
-    } yield
+    parseArgs(args).map { programArgs =>
       Either.catchNonFatal {
-        new ReleaseVersioning(programArgs.makeRelease, programArgs.makeHotfix)
-          .version(programArgs.tags, gitDescribe, programArgs.majorVersion)
-      }) match {
+        ReleaseVersioning
+          .version(programArgs.release, programArgs.hotfix, programArgs.optLatestTag, programArgs.majorVersion)
+      }
+    } match {
       case Some(Right(nextReleaseVersion)) =>
         Console.out.println(nextReleaseVersion)
         System.exit(0)
@@ -50,23 +47,15 @@ object Main {
 
   private def parseArgs(args: Array[String]): Option[Args] =
     new OptionParser[Args]("release-versioning") {
-      opt[Boolean]('r', "make-release")
-        .required()
-        .action((r, args) => args.copy(makeRelease = r))
-        .text("make-release is a Boolean required argument indicating whether it should create a release or a snapshot")
-      opt[Boolean]('f', "make-hotfix")
-        .required()
-        .action((hf, args) => args.copy(makeHotfix = hf))
-        .text("make-hotfix is a Boolean required argument indicating whether it should create a hotfix or a major/minor release")
-      opt[Seq[String]]('t', "tags")
-        .required()
-        .action((ts, args) => args.copy(tags = ts))
-        .text(
-          "tags is a required argument containing the output from 'git tag --list' as a comma-separated list of values")
-      opt[String]('d', "git-describe")
-        .required()
-        .action((gd, args) => args.copy(maybeGitDescribe = Some(gd)))
-        .text("git-describe is a required argument with the output from 'git describe --always'")
+      opt[Unit]('r', "release")
+        .action((_, args) => args.copy(release = true))
+        .text("release is a required Boolean argument indicating whether it should be a release or a snapshot")
+      opt[Unit]('f', "hotfix")
+        .action((_, args) => args.copy(hotfix = true))
+        .text("hotfix is a required Boolean argument indicating whether it should be a hotfix or a major/minor release")
+      opt[String]('t', "latest-tag")
+        .action((gd, args) => args.copy(optLatestTag = Some(gd)))
+        .text("latest-tag is an optional argument expecting the latest tag name")
       opt[Int]('m', "major-version")
         .required()
         .action((m, args) => args.copy(majorVersion = m))
