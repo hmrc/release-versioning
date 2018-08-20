@@ -22,7 +22,7 @@
  
  ```scala
  
- val releaseVersioning = new ReleaseVersionFinder(
+ val releaseVersioning = new ReleaseVersioning(
    makeRelease = <a Boolean value>,
    makeHotfix  = <a Boolean value>
  )
