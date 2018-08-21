@@ -21,16 +21,11 @@
  ## Usage as a Library
  
  ```scala
- 
- val releaseVersioning = new ReleaseVersioning(
-   makeRelease = <a Boolean value>,
-   makeHotfix  = <a Boolean value>
- )
-  
- releaseVersioning.version(
-   tags = <a Seq of tags>,
-   gitDescribe = <output of `git describe --always`>,
-   majorVersion = <desired major version>
+ ReleaseVersioning.version(
+   release = <a Boolean value>,
+   hotfix  = <a Boolean value>,
+   latestTag = <an Option[String] with the tag name>,
+   majorVersion = <an Int with the desired major version>
  )
  ```
  
@@ -46,12 +41,12 @@ java -jar $WORKSPACE/release-versioning/target/scala-2.10/release-versioning-ass
 Usage: release-versioning [options]
 
   --help                   prints this usage text
-  -r, --release            release is a required Boolean argument indicating whether it should be a release or a snapshot
-  -f, --hotfix             hotfix is a required Boolean argument indicating whether it should be a hotfix or a major/minor release
+  -r, --release            release is an optional flag indicating whether it should be a release or a snapshot
+  -f, --hotfix             hotfix is an optional flag indicating whether it should be a hotfix or a major/minor release
   -t, --latest-tag <value>
                            latest-tag is an optional argument expecting the latest tag name
   -m, --major-version <value>
-                           major-version is required when the latest-tag option is defined
+                           major-version is required when latest-tag option is defined
 ```
  
  Examples: 

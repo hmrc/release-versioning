@@ -33,8 +33,8 @@ val testDependencies = Seq(
 val assemblySettings = Seq(
   test in assembly := {},
   assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", xs @ _*)                            => MergeStrategy.discard
-    case x                                                        => (assemblyMergeStrategy in assembly).value(x)
+    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+    case x                             => (assemblyMergeStrategy in assembly).value(x)
   },
   artifact in (Compile, assembly) := {
     val art = (artifact in (Compile, assembly)).value

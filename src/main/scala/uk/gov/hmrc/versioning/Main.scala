@@ -54,10 +54,10 @@ object Main {
 
       opt[Unit]('r', "release")
         .action((_, args) => args.copy(release = true))
-        .text("release is a required Boolean argument indicating whether it should be a release or a snapshot")
+        .text("release is an optional flag indicating whether it should be a release or a snapshot")
       opt[Unit]('f', "hotfix")
         .action((_, args) => args.copy(hotfix = true))
-        .text("hotfix is a required Boolean argument indicating whether it should be a hotfix or a major/minor release")
+        .text("hotfix is an optional flag indicating whether it should be a hotfix or a major/minor release")
       opt[String]('t', latestTagOptionName)
         .action((gd, args) => args.copy(optLatestTag = Some(gd)))
         .text(s"$latestTagOptionName is an optional argument expecting the latest tag name")
