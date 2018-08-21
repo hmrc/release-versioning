@@ -29,19 +29,12 @@ class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPrope
     )
 
     forAll(scenarios) { (release, expectedVersionSuffix) =>
-      s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.1-1-g1234567 and release is $release" in {
+      s"return 0.2.0$expectedVersionSuffix when the latest tag is is v0.1.1 and release is $release" in {
         ReleaseVersioning
-          .version(release, hotfix = false, latestTag = Some("v0.1.1-1-g1234567"), majorVersion = 0) shouldBe s"0.2.0$expectedVersionSuffix"
+          .version(release, hotfix = false, latestTag = Some("v0.1.1"), majorVersion = 0) shouldBe s"0.2.0$expectedVersionSuffix"
       }
 
-      s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.0 (a tag on HEAD) and release" +
-        s" is $release" in {
-        ReleaseVersioning
-          .version(release, hotfix = false, latestTag = Some("v0.1.0"), majorVersion = 0) shouldBe s"0.2.0$expectedVersionSuffix"
-      }
-
-      s"return 0.1.0$expectedVersionSuffix when git describe returns the id on HEAD (no tags) and release" +
-        s" is $release" in {
+      s"return 0.1.0$expectedVersionSuffix when the latest tag does not exist and release is $release" in {
         ReleaseVersioning
           .version(release, hotfix = false, latestTag = None, majorVersion = 0) shouldBe s"0.1.0$expectedVersionSuffix"
       }
@@ -54,19 +47,12 @@ class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPrope
         }.getMessage shouldBe "invalid version format for 'v0.1.0.1'"
       }
 
-      s"use the new major version when release" +
-        s" is $release" in {
-        ReleaseVersioning
-          .version(release, hotfix = false, latestTag = Some("v0.1.0-1-g1234567"), majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
-      }
-
-      s"use the new major version and return 1.0.0$expectedVersionSuffix when given v0.1.0 (a tag on HEAD) and release" +
-        s" is $release" in {
+      s"use the new major version when release is $release" in {
         ReleaseVersioning
           .version(release, hotfix = false, latestTag = Some("v0.1.0"), majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
       }
 
-      s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 (a tag on HEAD) and release" +
+      s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 and release" +
         s" is $release" in {
         ReleaseVersioning
           .version(release, hotfix = false, latestTag = Some("release/0.1.0"), majorVersion = 1) shouldBe s"1.0.0$expectedVersionSuffix"
@@ -74,28 +60,28 @@ class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPrope
 
       s"create a new patch if hotfix is true and release is $release" in {
         ReleaseVersioning
-          .version(release, hotfix = true, latestTag = Some("v0.1.0-1-g1234567"), majorVersion = 0) shouldBe s"0.1.1$expectedVersionSuffix"
+          .version(release, hotfix = true, latestTag = Some("v0.1.0"), majorVersion = 0) shouldBe s"0.1.1$expectedVersionSuffix"
       }
 
       s"throw an exception if a new major is requested at the same time as a hotfix and release" +
         s" is $release" in {
         intercept[IllegalArgumentException] {
           ReleaseVersioning
-            .version(release, hotfix = true, latestTag = Some("v0.1.0-1-g1234567"), majorVersion = 1)
+            .version(release, hotfix = true, latestTag = Some("v0.1.0"), majorVersion = 1)
         }.getMessage shouldBe "Invalid majorVersion: 1. It is not possible to change the major version as part of a hotfix."
       }
 
       s"throw exception if new major version is > current version + 1 and release is $release" in {
         intercept[IllegalArgumentException] {
           ReleaseVersioning
-            .version(release, hotfix = false, latestTag = Some("v0.1.0-1-g1234567"), majorVersion = 2)
+            .version(release, hotfix = false, latestTag = Some("v0.1.0"), majorVersion = 2)
         }.getMessage shouldBe "Invalid majorVersion: 2. The accepted values are 0 or 1 based on current git tags."
       }
 
       s"throw exception if new major version is < current version and release is $release" in {
         intercept[IllegalArgumentException] {
           ReleaseVersioning
-            .version(release, hotfix = false, latestTag = Some("v1.1.0-1-g1234567"), majorVersion = 0)
+            .version(release, hotfix = false, latestTag = Some("v1.1.0"), majorVersion = 0)
         }.getMessage shouldBe "Invalid majorVersion: 0. The accepted values are 1 or 2 based on current git tags."
       }
 

@@ -58,7 +58,7 @@ object ReleaseVersioning {
         throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
     }
 
-  private val latestTagFormat = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(?:-.*-g.*$$){0,1}""".r
+  private val latestTagFormat = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)$""".r
 
   private object AsInt {
     def unapply(arg: String): Option[Int] = Some(arg.toInt)
