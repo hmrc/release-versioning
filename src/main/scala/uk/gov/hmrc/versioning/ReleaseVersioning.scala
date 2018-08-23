@@ -17,6 +17,7 @@
 package uk.gov.hmrc.versioning
 
 object ReleaseVersioning {
+
   def version(release: Boolean, hotfix: Boolean, latestTag: Option[String], majorVersion: Int): String =
     nextVersion(release, hotfix, latestTag, majorVersion) + (if (release) "" else "-SNAPSHOT")
 
@@ -24,41 +25,41 @@ object ReleaseVersioning {
     release: Boolean,
     hotfix: Boolean,
     latestTag: Option[String],
-    requestedMajorVersion: Int): String =
-    latestTag match {
-      case None if requestedMajorVersion > 0 =>
-        throw new IllegalArgumentException(
-          s"Invalid majorVersion: $requestedMajorVersion. You cannot request a major version of $requestedMajorVersion if there are no tags in the repository."
-        )
+    requestedMajorVersion: Int): String = latestTag match {
 
-      case None =>
-        "0.1.0"
+    case None if requestedMajorVersion > 0 =>
+      throw new IllegalArgumentException(
+        s"Invalid majorVersion: $requestedMajorVersion. You cannot request a major version of $requestedMajorVersion if there are no tags in the repository."
+      )
 
-      case Some(latestTagFormat(AsInt(major), _, _)) if major != requestedMajorVersion && hotfix =>
-        throw new IllegalArgumentException(
-          s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
-        )
+    case None =>
+      "0.1.0"
 
-      case Some(latestTagFormat(AsInt(major), _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
-        throw new IllegalArgumentException(
-          s"Invalid majorVersion: $requestedMajorVersion. " +
-            s"The accepted values are $major or ${major + 1} based on current git tags."
-        )
+    case Some(tag(AsInt(major), _, _)) if major != requestedMajorVersion && hotfix =>
+      throw new IllegalArgumentException(
+        s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
+      )
 
-      case Some(latestTagFormat(AsInt(major), _, _)) if requestedMajorVersion != major =>
-        s"$requestedMajorVersion.0.0"
+    case Some(tag(AsInt(major), _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
+      throw new IllegalArgumentException(
+        s"Invalid majorVersion: $requestedMajorVersion. " +
+          s"The accepted values are $major or ${major + 1} based on current git tags."
+      )
 
-      case Some(latestTagFormat(major, minor, AsInt(patch))) if hotfix =>
-        s"$major.$minor.${patch + 1}"
+    case Some(tag(AsInt(major), _, _)) if requestedMajorVersion != major =>
+      s"$requestedMajorVersion.0.0"
 
-      case Some(latestTagFormat(major, AsInt(minor), _)) =>
-        s"$major.${minor + 1}.0"
+    case Some(tag(major, minor, AsInt(patch))) if hotfix =>
+      s"$major.$minor.${patch + 1}"
 
-      case Some(unrecognizedGitDescribe) =>
-        throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
-    }
+    case Some(tag(major, AsInt(minor), _)) =>
+      s"$major.${minor + 1}.0"
 
-  private val latestTagFormat = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)$""".r
+    case Some(unrecognizedGitDescribe) =>
+      throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
+  }
+
+  private val tag = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(?:-\d+-g[a-z0-9]{7}$)?""".r
 
   private object AsInt {
     def unapply(arg: String): Option[Int] = Some(arg.toInt)
