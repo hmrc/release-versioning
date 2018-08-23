@@ -21,6 +21,8 @@ import scopt.OptionParser
 
 object Main {
 
+  import ReleaseVersioning.calculateNextVersion
+
   def main(args: Array[String]): Unit =
     parseArgs(args) map toVersion match {
       case Some(Right(nextReleaseVersion)) =>
@@ -35,41 +37,46 @@ object Main {
 
   private def toVersion(args: Args) =
     Either.catchNonFatal {
-      ReleaseVersioning.version(args.release, args.hotfix, args.optLatestTag, args.majorVersion.getOrElse(0))
+      calculateNextVersion(
+        args.release,
+        args.hotfix,
+        args.maybeGitDescribe,
+        majorVersion = args.maybeMajorVersion.getOrElse(0)
+      )
     }
 
   private case class Args(
-    release: Boolean             = false,
-    hotfix: Boolean              = false,
-    optLatestTag: Option[String] = None,
-    majorVersion: Option[Int]    = None
+    release: Boolean                 = false,
+    hotfix: Boolean                  = false,
+    maybeGitDescribe: Option[String] = None,
+    maybeMajorVersion: Option[Int]   = None
   )
 
   private def parseArgs(args: Array[String]): Option[Args] =
     new OptionParser[Args]("release-versioning") {
 
-      private val latestTagOptionName = "latest-tag"
+      private val gitDescribeOptionName = "git-describe"
 
       help("help").text("prints this usage text")
 
-      opt[Unit]('r', "release")
+      opt[Unit]("release")
         .action((_, args) => args.copy(release = true))
         .text("release is an optional flag indicating whether it should be a release or a snapshot")
-      opt[Unit]('f', "hotfix")
+      opt[Unit]("hotfix")
         .action((_, args) => args.copy(hotfix = true))
         .text("hotfix is an optional flag indicating whether it should be a hotfix or a major/minor release")
-      opt[String]('t', latestTagOptionName)
-        .action((gd, args) => args.copy(optLatestTag = Some(gd)))
-        .text(s"$latestTagOptionName is an optional argument expecting the latest tag name")
-      opt[Int]('m', "major-version")
-        .action((m, args) => args.copy(majorVersion = Some(m)))
-        .text(s"major-version is required when $latestTagOptionName option is defined")
+      opt[String](gitDescribeOptionName)
+        .action((gd, args) => args.copy(maybeGitDescribe = Some(gd)))
+        .text(s"$gitDescribeOptionName is an optional argument expecting an outcome of `git describe` command")
+      opt[Int]("major-version")
+        .action((m, args) => args.copy(maybeMajorVersion = Some(m)))
+        .text(s"major-version is required when $gitDescribeOptionName option is defined")
 
       checkConfig {
         case Args(_, _, None, Some(majorVersion)) if majorVersion > 0 =>
-          Left(s"You cannot request a major version of $majorVersion if there is no $latestTagOptionName given.")
+          Left(s"You cannot request a major version of $majorVersion if there is no $gitDescribeOptionName given.")
         case Args(_, _, Some(_), None) =>
-          Left(s"major-version is required when $latestTagOptionName option is defined")
+          Left(s"major-version is required when $gitDescribeOptionName option is defined")
         case _ =>
           Right[String, Unit](())
       }

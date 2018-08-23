@@ -18,14 +18,18 @@ package uk.gov.hmrc.versioning
 
 object ReleaseVersioning {
 
-  def version(release: Boolean, hotfix: Boolean, latestTag: Option[String], majorVersion: Int): String =
-    nextVersion(release, hotfix, latestTag, majorVersion) + (if (release) "" else "-SNAPSHOT")
-
-  private def nextVersion(
+  def calculateNextVersion(
     release: Boolean,
     hotfix: Boolean,
-    latestTag: Option[String],
-    requestedMajorVersion: Int): String = latestTag match {
+    maybeGitDescribe: Option[String],
+    majorVersion: Int): String =
+    calculateVersion(release, hotfix, maybeGitDescribe, majorVersion) + suffix(release)
+
+  private def calculateVersion(
+    release: Boolean,
+    hotfix: Boolean,
+    maybeGitDescribe: Option[String],
+    requestedMajorVersion: Int): String = maybeGitDescribe match {
 
     case None if requestedMajorVersion > 0 =>
       throw new IllegalArgumentException(
@@ -67,4 +71,8 @@ object ReleaseVersioning {
 
   private def validMajorVersion(current: Int, requested: Int): Boolean =
     requested == current || requested == current + 1
+
+  private def suffix(release: Boolean) =
+    if (release) ""
+    else "-SNAPSHOT"
 }
