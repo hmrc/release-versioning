@@ -42,6 +42,15 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         ) shouldBe s"0.2.0$expectedVersionSuffix"
       }
 
+      s"return 0.2.0$expectedVersionSuffix when git describe is release/0.53.0-1-gd8f1a21c and release is $release" in {
+        calculateNextVersion(
+          release,
+          hotfix           = false,
+          maybeGitDescribe = Some("release/0.53.0-1-gd8f1a21c"),
+          majorVersion     = 0
+        ) shouldBe s"0.54.0$expectedVersionSuffix"
+      }
+
       s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.0 (a tag on HEAD) and release" +
         s" is $release" in {
         calculateNextVersion(
