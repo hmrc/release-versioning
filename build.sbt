@@ -11,7 +11,8 @@ lazy val releaseVersioning = Project(appName, file("."))
   .settings(scalaSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
-    scalaVersion := "2.10.7",
+    scalaVersion := "2.11.12",
+    crossScalaVersions := Vector("2.10.7", "2.11.12", "2.12.8"),
     majorVersion := 0,
     makePublicallyAvailableOnBintray := true,
     libraryDependencies ++= compileDependencies ++ testDependencies,
@@ -21,13 +22,13 @@ lazy val releaseVersioning = Project(appName, file("."))
   )
 
 val compileDependencies = Seq(
-  "com.github.scopt" %% "scopt"     % "3.7.0",
+  "com.github.scopt" %% "scopt"     % "3.7.1",
   "org.typelevel"    %% "cats-core" % "1.2.0"
 )
 
 val testDependencies = Seq(
-  "org.pegdown"   % "pegdown"    % "1.6.0" % Test,
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test
+  "org.scalatest"         %% "scalatest"    % "3.1.0-M2"  % Test,
+  "com.vladsch.flexmark"  % "flexmark-all"  % "0.35.10"   % Test
 )
 
 val assemblySettings = Seq(
