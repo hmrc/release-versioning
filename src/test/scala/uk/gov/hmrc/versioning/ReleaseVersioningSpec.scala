@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.versioning
 
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
+class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPropertyChecks {
 
   import ReleaseVersioning.calculateNextVersion
 
@@ -37,6 +36,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("v0.1.1-1-g1234567"),
           majorVersion     = 0
         ) shouldBe s"0.2.0$expectedVersionSuffix"
@@ -46,6 +46,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("release/0.53.0-1-gd8f1a21c"),
           majorVersion     = 0
         ) shouldBe s"0.54.0$expectedVersionSuffix"
@@ -56,6 +57,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("v0.1.0"),
           majorVersion     = 0
         ) shouldBe s"0.2.0$expectedVersionSuffix"
@@ -66,6 +68,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = None,
           majorVersion     = 0
         ) shouldBe s"0.1.0$expectedVersionSuffix"
@@ -76,6 +79,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         intercept[IllegalArgumentException] {
           calculateNextVersion(
             release,
+            releaseCandidate = false,
             hotfix           = false,
             maybeGitDescribe = Some("v0.1.0.1"),
             majorVersion     = 0
@@ -88,6 +92,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("v0.1.0-1-g1234567"),
           majorVersion     = 1
         ) shouldBe s"1.0.0$expectedVersionSuffix"
@@ -98,6 +103,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("v0.1.0"),
           majorVersion     = 1
         ) shouldBe s"1.0.0$expectedVersionSuffix"
@@ -108,6 +114,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = false,
+          releaseCandidate = false,
           maybeGitDescribe = Some("release/0.1.0"),
           majorVersion     = 1
         ) shouldBe s"1.0.0$expectedVersionSuffix"
@@ -117,6 +124,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
         calculateNextVersion(
           release,
           hotfix           = true,
+          releaseCandidate = false,
           maybeGitDescribe = Some("v0.1.0-1-g1234567"),
           majorVersion     = 0
         ) shouldBe s"0.1.1$expectedVersionSuffix"
@@ -127,6 +135,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
           calculateNextVersion(
             release,
             hotfix           = true,
+            releaseCandidate = false,
             maybeGitDescribe = Some("v0.1.0-1-g1234567"),
             majorVersion     = 1
           )
@@ -138,6 +147,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
           calculateNextVersion(
             release,
             hotfix           = false,
+            releaseCandidate = false,
             maybeGitDescribe = Some("v0.1.0-1-g1234567"),
             majorVersion     = 2
           )
@@ -149,6 +159,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
           calculateNextVersion(
             release,
             hotfix           = false,
+            releaseCandidate = false,
             maybeGitDescribe = Some("v1.1.0-1-g1234567"),
             majorVersion     = 0
           )
@@ -160,6 +171,7 @@ class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
           calculateNextVersion(
             release,
             hotfix           = false,
+            releaseCandidate = false,
             maybeGitDescribe = None,
             majorVersion     = 1
           )

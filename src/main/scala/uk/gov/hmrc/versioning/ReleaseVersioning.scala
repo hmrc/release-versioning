@@ -21,13 +21,15 @@ object ReleaseVersioning {
   def calculateNextVersion(
     release: Boolean,
     hotfix: Boolean,
+    releaseCandidate: Boolean,
     maybeGitDescribe: Option[String],
     majorVersion: Int): String =
-    calculateVersion(release, hotfix, maybeGitDescribe, majorVersion) + suffix(release)
+    calculateVersion(release, hotfix, releaseCandidate, maybeGitDescribe, majorVersion) + suffix(release)
 
   private def calculateVersion(
     release: Boolean,
     hotfix: Boolean,
+    releaseCandidate: Boolean,
     maybeGitDescribe: Option[String],
     requestedMajorVersion: Int): String = maybeGitDescribe match {
 
