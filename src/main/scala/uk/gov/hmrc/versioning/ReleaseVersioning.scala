@@ -31,7 +31,8 @@ object ReleaseVersioning {
     hotfix: Boolean,
     releaseCandidate: Boolean,
     maybeGitDescribe: Option[String],
-    requestedMajorVersion: Int): String = maybeGitDescribe match {
+    requestedMajorVersion: Int
+  ): String = maybeGitDescribe.flatMap(Version.parse) match {
 
     case None if requestedMajorVersion > 0 =>
       throw new IllegalArgumentException(
@@ -41,34 +42,44 @@ object ReleaseVersioning {
     case None =>
       "0.1.0"
 
-    case Some(tag(AsInt(major), _, _)) if major != requestedMajorVersion && hotfix =>
+    case Some(Version(major, _, _, _)) if major != requestedMajorVersion && hotfix =>
       throw new IllegalArgumentException(
         s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
       )
 
-    case Some(tag(AsInt(major), _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
+    case Some(Version(major, _, _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
       throw new IllegalArgumentException(
         s"Invalid majorVersion: $requestedMajorVersion. " +
           s"The accepted values are $major or ${major + 1} based on current git tags."
       )
 
-    case Some(tag(AsInt(major), _, _)) if requestedMajorVersion != major =>
+    case Some(Version(major, _, _, _)) if requestedMajorVersion != major =>
       s"$requestedMajorVersion.0.0"
 
-    case Some(tag(major, minor, AsInt(patch))) if hotfix =>
+    case Some(Version(major, minor, patch, _)) if hotfix =>
       s"$major.$minor.${patch + 1}"
 
-    case Some(tag(major, AsInt(minor), _)) =>
+    case Some(Version(major, minor, _, _)) =>
       s"$major.${minor + 1}.0"
 
     case Some(unrecognizedGitDescribe) =>
       throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
   }
 
-  private val tag = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(?:-\d+-g[a-z0-9]{4,40}$)?""".r
-
-  private object AsInt {
-    def unapply(arg: String): Option[Int] = Some(arg.toInt)
+  case class Version(
+    major: Int,
+    minor: Int,
+    patch: Int,
+    rc: Option[Int]
+  )
+  object Version {
+    private val tag = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(-RC(\d+))?(?:-\d+-g[a-z0-9]{4,40}$)?""".r
+    def parse(s: String): Option[Version] =
+      s match {
+        case tag(major, minor, patch, _, rc) =>
+          Some(Version(major.toInt, minor.toInt, patch.toInt, Option(rc).filterNot(_ == "null").map(_.toInt)))
+        case _ => None
+      }
   }
 
   private def validMajorVersion(current: Int, requested: Int): Boolean =
