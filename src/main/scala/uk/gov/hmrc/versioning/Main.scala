@@ -69,7 +69,7 @@ object Main {
         .text("hotfix is an optional flag indicating whether it should be a hotfix or a major/minor release")
       opt[Unit]("release-candidate")
         .action((_, args) => args.copy(releaseCandidate = true))
-        .text("release-candidate is an optional flag indicating whether it should be a hotfix or a major/minor release")
+        .text("release-candidate is an optional flag indicating whether it should be a release-candidate or not")
       opt[String](gitDescribeOptionName)
         .action((gd, args) => args.copy(maybeGitDescribe = Some(gd)))
         .text(s"$gitDescribeOptionName is an optional argument expecting an outcome of `git describe` command")

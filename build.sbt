@@ -9,7 +9,6 @@ lazy val releaseVersioning = Project("release-versioning", file("."))
     majorVersion := 0,
     isPublicArtefact := true,
     libraryDependencies ++= compileDependencies ++ testDependencies,
-    retrieveManaged := true,
     assemblySettings
   )
 
@@ -29,10 +28,7 @@ val assemblySettings = Seq(
     case PathList("META-INF", xs @ _*) => MergeStrategy.discard
     case x                             => (assembly / assemblyMergeStrategy).value(x)
   },
-  artifact in (Compile, assembly) := {
-    val art = (Compile / assembly / artifact).value
-    art.withClassifier(Some("assembly"))
-  }
+  Compile / assembly / artifact := (Compile / assembly / artifact).value.withClassifier(Some("assembly"))
 )
 
 addArtifact(Compile / assembly / artifact, assembly)

@@ -24,7 +24,7 @@ object ReleaseVersioning {
     releaseCandidate: Boolean,
     maybeGitDescribe: Option[String],
     majorVersion: Int): String =
-    calculateVersion(release, hotfix, releaseCandidate, maybeGitDescribe, majorVersion) + suffix(release)
+    calculateVersion(release, hotfix, releaseCandidate, maybeGitDescribe, majorVersion) + releaseSuffix(release)
 
   private def calculateVersion(
     release: Boolean,
@@ -32,7 +32,7 @@ object ReleaseVersioning {
     releaseCandidate: Boolean,
     maybeGitDescribe: Option[String],
     requestedMajorVersion: Int
-  ): String = maybeGitDescribe.flatMap(Version.parse) match {
+  ): String = maybeGitDescribe match {
 
     case None if requestedMajorVersion > 0 =>
       throw new IllegalArgumentException(
@@ -40,44 +40,51 @@ object ReleaseVersioning {
       )
 
     case None =>
-      "0.1.0"
+      s"0.1.0${releaseCandidateSuffix(releaseCandidate, None)}"
 
-    case Some(Version(major, _, _, _)) if major != requestedMajorVersion && hotfix =>
-      throw new IllegalArgumentException(
-        s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
-      )
+    case Some(v) => Version.parse(v) match {
+      case Some(Version(major, _, _, _)) if major != requestedMajorVersion && hotfix =>
+        throw new IllegalArgumentException(
+          s"Invalid majorVersion: $requestedMajorVersion. It is not possible to change the major version as part of a hotfix."
+        )
 
-    case Some(Version(major, _, _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
-      throw new IllegalArgumentException(
-        s"Invalid majorVersion: $requestedMajorVersion. " +
-          s"The accepted values are $major or ${major + 1} based on current git tags."
-      )
+      case Some(Version(major, _, _, _)) if !validMajorVersion(major, requestedMajorVersion) =>
+        throw new IllegalArgumentException(
+          s"Invalid majorVersion: $requestedMajorVersion. " +
+            s"The accepted values are $major or ${major + 1} based on current git tags."
+        )
 
-    case Some(Version(major, _, _, _)) if requestedMajorVersion != major =>
-      s"$requestedMajorVersion.0.0"
+      // was previously a releaseCandidate, but not anymore
+      case Some(Version(major, minor, patch, Some(_))) if !releaseCandidate =>
+        s"$major.$minor.$patch"
 
-    case Some(Version(major, minor, patch, _)) if hotfix =>
-      s"$major.$minor.${patch + 1}"
+      case Some(Version(major, _, _, optRc)) if major != requestedMajorVersion =>
+        s"$requestedMajorVersion.0.0${releaseCandidateSuffix(releaseCandidate, optRc)}"
 
-    case Some(Version(major, minor, _, _)) =>
-      s"$major.${minor + 1}.0"
+      case Some(Version(major, minor, patch, optRc)) if hotfix =>
+        s"$major.$minor.${patch + 1}${releaseCandidateSuffix(releaseCandidate, optRc)}"
 
-    case Some(unrecognizedGitDescribe) =>
-      throw new IllegalArgumentException(s"invalid version format for '$unrecognizedGitDescribe'")
+      case Some(Version(major, minor, _, optRc)) =>
+        s"$major.${minor + 1}.0${releaseCandidateSuffix(releaseCandidate, optRc)}"
+
+      case _ =>
+        throw new IllegalArgumentException(s"invalid version format for '$v'")
+    }
   }
 
-  case class Version(
+  private case class Version(
     major: Int,
     minor: Int,
     patch: Int,
     rc: Option[Int]
   )
-  object Version {
+  private object Version {
     private val tag = """^(?:release\/|v)?(\d+)\.(\d+)\.(\d+)(-RC(\d+))?(?:-\d+-g[a-z0-9]{4,40}$)?""".r
+
     def parse(s: String): Option[Version] =
       s match {
         case tag(major, minor, patch, _, rc) =>
-          Some(Version(major.toInt, minor.toInt, patch.toInt, Option(rc).filterNot(_ == "null").map(_.toInt)))
+          Some(Version(major.toInt, minor.toInt, patch.toInt, Option(rc).map(_.toInt)))
         case _ => None
       }
   }
@@ -85,7 +92,15 @@ object ReleaseVersioning {
   private def validMajorVersion(current: Int, requested: Int): Boolean =
     requested == current || requested == current + 1
 
-  private def suffix(release: Boolean) =
-    if (release) ""
-    else "-SNAPSHOT"
+  private def releaseSuffix(release: Boolean) =
+    if (release)
+      ""
+    else
+      "-SNAPSHOT"
+
+  private def releaseCandidateSuffix(releaseCandidate: Boolean, optRc: Option[Int]): String =
+    if (releaseCandidate)
+      s"-RC${optRc.getOrElse(0) + 1}"
+    else
+      ""
 }
