@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ object Main {
   import ReleaseVersioning.calculateNextVersion
 
   def main(args: Array[String]): Unit =
-    parseArgs(args) map toVersion match {
+    parseArgs(args).map(toVersion) match {
       case Some(Right(nextReleaseVersion)) =>
         Console.out.println(nextReleaseVersion)
         System.exit(0)
@@ -40,6 +40,7 @@ object Main {
       calculateNextVersion(
         args.release,
         args.hotfix,
+        args.releaseCandidate,
         args.maybeGitDescribe,
         majorVersion = args.maybeMajorVersion.getOrElse(0)
       )
@@ -48,6 +49,7 @@ object Main {
   private case class Args(
     release: Boolean                 = false,
     hotfix: Boolean                  = false,
+    releaseCandidate: Boolean        = false,
     maybeGitDescribe: Option[String] = None,
     maybeMajorVersion: Option[Int]   = None
   )
@@ -65,6 +67,9 @@ object Main {
       opt[Unit]("hotfix")
         .action((_, args) => args.copy(hotfix = true))
         .text("hotfix is an optional flag indicating whether it should be a hotfix or a major/minor release")
+      opt[Unit]("release-candidate")
+        .action((_, args) => args.copy(releaseCandidate = true))
+        .text("release-candidate is an optional flag indicating whether it should be a release-candidate or not")
       opt[String](gitDescribeOptionName)
         .action((gd, args) => args.copy(maybeGitDescribe = Some(gd)))
         .text(s"$gitDescribeOptionName is an optional argument expecting an outcome of `git describe` command")
@@ -73,9 +78,9 @@ object Main {
         .text(s"major-version is required when $gitDescribeOptionName option is defined")
 
       checkConfig {
-        case Args(_, _, None, Some(majorVersion)) if majorVersion > 0 =>
+        case Args(_, _, _, None, Some(majorVersion)) if majorVersion > 0 =>
           Left(s"You cannot request a major version of $majorVersion if there is no $gitDescribeOptionName given.")
-        case Args(_, _, Some(_), None) =>
+        case Args(_, _, _, Some(_), None) =>
           Left(s"major-version is required when $gitDescribeOptionName option is defined")
         case _ =>
           Right[String, Unit](())

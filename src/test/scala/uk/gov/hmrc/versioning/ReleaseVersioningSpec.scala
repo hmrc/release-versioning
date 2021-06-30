@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,154 +16,155 @@
 
 package uk.gov.hmrc.versioning
 
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class ReleaseVersioningSpec extends WordSpec with TableDrivenPropertyChecks {
+class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPropertyChecks {
 
   import ReleaseVersioning.calculateNextVersion
 
   "calculateNextVersion" should {
 
-    val scenarios = Table(
+    val releaseScenarios = Table(
       "release arg value" -> "Expected version suffix",
       true                -> "",
       false               -> "-SNAPSHOT"
     )
 
-    forAll(scenarios) { (release, expectedVersionSuffix) =>
-      s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.1-1-g1234567 and release is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("v0.1.1-1-g1234567"),
-          majorVersion     = 0
-        ) shouldBe s"0.2.0$expectedVersionSuffix"
-      }
+    val releaseCandidateScenarios = Table(
+      "release-candidate arg value" -> "Expected RC suffix",
+      true                -> "-RC1",
+      false               -> ""
+    )
 
-      s"return 0.2.0$expectedVersionSuffix when git describe is release/0.53.0-1-gd8f1a21c and release is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("release/0.53.0-1-gd8f1a21c"),
-          majorVersion     = 0
-        ) shouldBe s"0.54.0$expectedVersionSuffix"
-      }
-
-      s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.0 (a tag on HEAD) and release" +
-        s" is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("v0.1.0"),
-          majorVersion     = 0
-        ) shouldBe s"0.2.0$expectedVersionSuffix"
-      }
-
-      s"return 0.1.0$expectedVersionSuffix when git describe returns the id on HEAD (no tags) and release" +
-        s" is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = None,
-          majorVersion     = 0
-        ) shouldBe s"0.1.0$expectedVersionSuffix"
-      }
-
-      s"throw exception when given v0.1.0.1 (a tag with an incorrect format) and release" +
-        s" is $release" in {
-        intercept[IllegalArgumentException] {
+    forAll(releaseScenarios) { (release, expectedVersionSuffix) =>
+      forAll(releaseCandidateScenarios) { (releaseCandidate, expectedRCSuffix) =>
+        s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.1-1-g1234567 and release: $release, releaseCandidate: $releaseCandidate" in {
           calculateNextVersion(
             release,
             hotfix           = false,
-            maybeGitDescribe = Some("v0.1.0.1"),
+            releaseCandidate,
+            maybeGitDescribe = Some("v0.1.1-1-g1234567"),
             majorVersion     = 0
-          )
-        }.getMessage shouldBe "invalid version format for 'v0.1.0.1'"
-      }
+          ) shouldBe s"0.2.0$expectedRCSuffix$expectedVersionSuffix"
+        }
 
-      "use the new major version when there are no tags on HEAD but there is one on previous commits" +
-        s" and release is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("v0.1.0-1-g1234567"),
-          majorVersion     = 1
-        ) shouldBe s"1.0.0$expectedVersionSuffix"
-      }
+        s"return 0.2.0$expectedVersionSuffix when git describe is release/0.53.0-1-gd8f1a21c and release: $release, releaseCandidate: $releaseCandidate" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = Some("release/0.53.0-1-gd8f1a21c"),
+            majorVersion     = 0
+          ) shouldBe s"0.54.0$expectedRCSuffix$expectedVersionSuffix"
+        }
 
-      s"use the new major version and return 1.0.0$expectedVersionSuffix when given v0.1.0 (a tag on HEAD) and release" +
-        s" is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("v0.1.0"),
-          majorVersion     = 1
-        ) shouldBe s"1.0.0$expectedVersionSuffix"
-      }
+        s"return 0.2.0$expectedVersionSuffix when git describe is v0.1.0 (a tag on HEAD) and release: $release, releaseCandidate: $releaseCandidate" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = Some("v0.1.0"),
+            majorVersion     = 0
+          ) shouldBe s"0.2.0$expectedRCSuffix$expectedVersionSuffix"
+        }
 
-      s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 (a tag on HEAD) and release" +
-        s" is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = false,
-          maybeGitDescribe = Some("release/0.1.0"),
-          majorVersion     = 1
-        ) shouldBe s"1.0.0$expectedVersionSuffix"
-      }
+        s"return 0.1.0$expectedVersionSuffix when git describe returns the id on HEAD (no tags) and release: $release, releaseCandidate: $releaseCandidate" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = None,
+            majorVersion     = 0
+          ) shouldBe s"0.1.0$expectedRCSuffix$expectedVersionSuffix"
+        }
 
-      s"create a new patch if hotfix is true and release is $release" in {
-        calculateNextVersion(
-          release,
-          hotfix           = true,
-          maybeGitDescribe = Some("v0.1.0-1-g1234567"),
-          majorVersion     = 0
-        ) shouldBe s"0.1.1$expectedVersionSuffix"
-      }
+        s"throw exception when given v0.1.0.1 (a tag with an incorrect format) and release: $release, releaseCandidate: $releaseCandidate" in {
+          intercept[IllegalArgumentException] {
+            calculateNextVersion(
+              release,
+              hotfix           = false,
+              releaseCandidate,
+              maybeGitDescribe = Some("v0.1.0.1"),
+              majorVersion     = 0
+            )
+          }.getMessage shouldBe "invalid version format for 'v0.1.0.1'"
+        }
 
-      s"throw an exception if a new major is requested at the same time as a hotfix and release is $release" in {
-        intercept[IllegalArgumentException] {
+        s"use the new major version when there are no tags on HEAD but there is one on previous commits and release: $release, releaseCandidate: $releaseCandidate" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = Some("v0.1.0-1-g1234567"),
+            majorVersion     = 1
+          ) shouldBe s"1.0.0$expectedRCSuffix$expectedVersionSuffix"
+        }
+
+        s"use the new major version and return 1.0.0$expectedVersionSuffix when given v0.1.0 (a tag on HEAD) and release: $release, releaseCandidate: $releaseCandidate" +
+          s" is $release" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = Some("v0.1.0"),
+            majorVersion     = 1
+          ) shouldBe s"1.0.0$expectedRCSuffix$expectedVersionSuffix"
+        }
+
+        s"use the new major version and return 1.0.0$expectedVersionSuffix when given release/0.1.0 (a tag on HEAD) and release: $release, releaseCandidate: $releaseCandidate" in {
+          calculateNextVersion(
+            release,
+            hotfix           = false,
+            releaseCandidate,
+            maybeGitDescribe = Some("release/0.1.0"),
+            majorVersion     = 1
+          ) shouldBe s"1.0.0$expectedRCSuffix$expectedVersionSuffix"
+        }
+
+        s"create a new patch if hotfix is true and release: $release, releaseCandidate: $releaseCandidate" in {
           calculateNextVersion(
             release,
             hotfix           = true,
+            releaseCandidate,
             maybeGitDescribe = Some("v0.1.0-1-g1234567"),
-            majorVersion     = 1
-          )
-        }.getMessage shouldBe "Invalid majorVersion: 1. It is not possible to change the major version as part of a hotfix."
-      }
-
-      s"throw exception if new major version is > current version + 1 and release is $release" in {
-        intercept[IllegalArgumentException] {
-          calculateNextVersion(
-            release,
-            hotfix           = false,
-            maybeGitDescribe = Some("v0.1.0-1-g1234567"),
-            majorVersion     = 2
-          )
-        }.getMessage shouldBe "Invalid majorVersion: 2. The accepted values are 0 or 1 based on current git tags."
-      }
-
-      s"throw exception if new major version is < current version and release is $release" in {
-        intercept[IllegalArgumentException] {
-          calculateNextVersion(
-            release,
-            hotfix           = false,
-            maybeGitDescribe = Some("v1.1.0-1-g1234567"),
             majorVersion     = 0
-          )
-        }.getMessage shouldBe "Invalid majorVersion: 0. The accepted values are 1 or 2 based on current git tags."
+          ) shouldBe s"0.1.1$expectedRCSuffix$expectedVersionSuffix"
+        }
       }
+    }
 
-      s"throw exception if major version > 0 is specified but no tags exist and release is $release" in {
-        intercept[IllegalArgumentException] {
+    s"if was a release candidate" should {
+      forAll(releaseScenarios) { (release, expectedVersionSuffix) =>
+        s"increment the release candidate if a releaseCandidate, not a hotfix and release: $release" in {
           calculateNextVersion(
             release,
             hotfix           = false,
-            maybeGitDescribe = None,
-            majorVersion     = 1
-          )
-        }.getMessage shouldBe "Invalid majorVersion: 1. You cannot request a major version of 1 if there are no tags in the repository."
+            releaseCandidate = true,
+            maybeGitDescribe = Some("v0.1.0-RC1-1-g1234567"),
+            majorVersion     = 0
+          ) shouldBe s"0.2.0-RC2$expectedVersionSuffix"
+        }
+
+        s"increment the release candidate if a releaseCandidate, a hotfix and release: $release" in {
+          calculateNextVersion(
+            release,
+            hotfix           = true,
+            releaseCandidate = true,
+            maybeGitDescribe = Some("v0.1.0-RC1-1-g1234567"),
+            majorVersion     = 0
+          ) shouldBe s"0.1.1-RC2$expectedVersionSuffix"
+        }
+
+        s"remove the release candidate if not a releaseCandidate, not a hotfix and release: $release" in {
+          calculateNextVersion(
+            release,
+            hotfix           = true,
+            releaseCandidate = false,
+            maybeGitDescribe = Some("v0.1.0-RC1-1-g1234567"),
+            majorVersion     = 0
+          ) shouldBe s"0.1.0$expectedVersionSuffix"
+        }
       }
     }
   }

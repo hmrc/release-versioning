@@ -1,24 +1,15 @@
-import sbt.Keys._
-import sbt._
 import uk.gov.hmrc.DefaultBuildSettings._
-import uk.gov.hmrc.versioning.SbtGitVersioning
-import uk.gov.hmrc.SbtArtifactory
 
-val appName: String = "release-versioning"
-
-lazy val releaseVersioning = Project(appName, file("."))
-  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
+lazy val releaseVersioning = Project("release-versioning", file("."))
   .settings(scalaSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
-    scalaVersion := "2.11.12",
+    scalaVersion := "2.12.14",
     crossScalaVersions := Vector("2.10.7", "2.11.12", "2.12.8"),
     majorVersion := 0,
-    makePublicallyAvailableOnBintray := true,
+    isPublicArtefact := true,
     libraryDependencies ++= compileDependencies ++ testDependencies,
-    retrieveManaged := true,
-    assemblySettings,
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+    assemblySettings
   )
 
 val compileDependencies = Seq(
@@ -32,15 +23,12 @@ val testDependencies = Seq(
 )
 
 val assemblySettings = Seq(
-  test in assembly := {},
-  assemblyMergeStrategy in assembly := {
+  assembly / test := {},
+  assembly / assemblyMergeStrategy := {
     case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-    case x                             => (assemblyMergeStrategy in assembly).value(x)
+    case x                             => (assembly / assemblyMergeStrategy).value(x)
   },
-  artifact in (Compile, assembly) := {
-    val art = (artifact in (Compile, assembly)).value
-    art.copy(`classifier` = Some("assembly"))
-  }
+  Compile / assembly / artifact := (Compile / assembly / artifact).value.withClassifier(Some("assembly"))
 )
 
-addArtifact(artifact in (Compile, assembly), assembly)
+addArtifact(Compile / assembly / artifact, assembly)
