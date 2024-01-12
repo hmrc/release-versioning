@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.versioning
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class ReleaseVersioningSpec extends WordSpec with Matchers with TableDrivenPropertyChecks {
+class ReleaseVersioningSpec extends AnyWordSpec with Matchers with TableDrivenPropertyChecks {
 
   import ReleaseVersioning.calculateNextVersion
 
