@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.versioning
 
-import cats.implicits._
 import scopt.OptionParser
+import scala.util.control.NonFatal
 
 object Main {
 
@@ -35,8 +35,8 @@ object Main {
         System.exit(1)
     }
 
-  private def toVersion(args: Args) =
-    Either.catchNonFatal {
+  private def toVersion(args: Args): Either[Throwable, String] =
+    try Right(
       calculateNextVersion(
         args.release,
         args.hotfix,
@@ -44,14 +44,16 @@ object Main {
         args.maybeGitDescribe,
         majorVersion = args.maybeMajorVersion.getOrElse(0)
       )
+    ) catch {
+      case NonFatal(e) => Left(e)
     }
 
   private case class Args(
-    release: Boolean                 = false,
-    hotfix: Boolean                  = false,
-    releaseCandidate: Boolean        = false,
-    maybeGitDescribe: Option[String] = None,
-    maybeMajorVersion: Option[Int]   = None
+    release          : Boolean        = false,
+    hotfix           : Boolean        = false,
+    releaseCandidate : Boolean        = false,
+    maybeGitDescribe : Option[String] = None,
+    maybeMajorVersion: Option[Int]    = None
   )
 
   private def parseArgs(args: Array[String]): Option[Args] =

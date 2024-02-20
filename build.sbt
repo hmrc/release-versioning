@@ -10,8 +10,7 @@ lazy val releaseVersioning = Project("release-versioning", file("."))
   )
 
 val compileDependencies = Seq(
-  "com.github.scopt" %% "scopt"     % "3.7.1",
-  "org.typelevel"    %% "cats-core" % "1.2.0"
+  "com.github.scopt" %% "scopt"     % "3.7.1"
 )
 
 val testDependencies = Seq(
